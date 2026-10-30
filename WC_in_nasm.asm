@@ -11,41 +11,43 @@ section .data
 WC:
     push ebp
     mov ebp, esp
-    sub esp, 24                 ; fd, lineas, palabras, caracteres, dentro, c
+    sub esp, 24 ; Para las variables locales
 
-    mov dword [ebp-8], 0        ; lineas
-    mov dword [ebp-12], 0       ; palabras
-    mov dword [ebp-16], 0       ; caracteres
-    mov dword [ebp-20], 0       ; dentroPalabra
+    ; Variables locales
+    mov dword [ebp-8], 0   
+    mov dword [ebp-12], 0    
+    mov dword [ebp-16], 0    
+    mov dword [ebp-20], 0  
 
     cmp dword [ebp+4], 2
     jl .error1
 
-    mov eax, 5                  ; open(argv[1], O_RDONLY)
+    ; Abrir el archivo
+    mov eax, 5                  
     mov ebx, [ebp+12]
     xor ecx, ecx
     xor edx, edx
     int 0x80
 
-    mov [ebp-4], eax            ; fd
+    mov [ebp-4], eax    
     test eax, eax
     js .error2
 
 .ciclo_lectura:
-    mov eax, 3                  ; read(fd, &c, 1)
+    mov eax, 3                  
     mov ebx, [ebp-4]
     lea ecx, [ebp-24]
     mov edx, 1
     int 0x80
     cmp eax, 1
-    jne .fin                    ; EOF
+    jne .fin ; EOF
 
-    inc dword [ebp-16]          ; caracteres++
+    inc dword [ebp-16]
     mov al, [ebp-24]
 
     cmp al, 10
     jne .espacio
-    inc dword [ebp-8]           ; lineas++
+    inc dword [ebp-8]
 
 .espacio:
     cmp al, 32
@@ -55,17 +57,18 @@ WC:
     cmp al, 13
     ja  .no_espacio
 .es_espacio:
-    mov dword [ebp-20], 0       ; dentroPalabra = 0
+    mov dword [ebp-20], 0 
     jmp .ciclo_lectura
 .no_espacio:
     cmp dword [ebp-20], 0
     jne .ciclo_lectura
-    inc dword [ebp-12]          ; palabras++
+    inc dword [ebp-12]  
     mov dword [ebp-20], 1
     jmp .ciclo_lectura
 
 .fin:
-    mov eax, 6                  ; close(fd)
+    ; fin del programa
+    mov eax, 6               
     mov ebx, [ebp-4]
     int 0x80
 
@@ -90,14 +93,14 @@ WC:
     call print_string
     add esp, 4
 
-    push dword [ebp+12]         ; nombre del archivo
+    push dword [ebp+12] ; nombre del archivo
     call print_string
     add esp, 4
     push salto
     call print_string
     add esp, 4
 
-    xor ebx, ebx                ; return 0
+    xor ebx, ebx ; return 0
     jmp .salir
 
 .error1:
@@ -116,7 +119,7 @@ WC:
 .salir:
     mov esp, ebp
     pop ebp
-    mov eax, 1                  ; exit(ebx)
+    mov eax, 1 ; exit(ebx)
     int 0x80
 
 ; imprime el entero sin signo que recibe en [ebp+8]
@@ -131,12 +134,12 @@ imprimir_num:
     xor edx, edx
     div ecx
     add dl, '0'
-    push edx                    ; los digitos se guardan en la pila
+    push edx ; los digitos se guardan en la pila
     inc edi
     test eax, eax
     jnz .d
 .p:
-    mov eax, 4                  ; write(1, esp, 1)
+    mov eax, 4 ; write(1, esp, 1)
     mov ebx, 1
     mov ecx, esp
     mov edx, 1
